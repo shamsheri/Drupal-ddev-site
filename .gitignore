@@ -105,8 +105,6 @@ yarn.lock
 /.console/
 
 # Local configuration directories
-/config/local/
-/config/staging/
 
 # =============================================================================
 # LOCAL-ONLY MODULES (Your custom local development modules)
