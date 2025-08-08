@@ -1,0 +1,67 @@
+uuid: 336b57a4-6574-452c-8223-0ff6bf8e9c86
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.tourist_point.field_activities
+    - field.field.node.tourist_point.field_address
+    - field.field.node.tourist_point.field_description
+    - field.field.node.tourist_point.field_imagess
+    - field.field.node.tourist_point.field_visiting_time
+    - node.type.tourist_point
+  module:
+    - image
+    - user
+id: node.tourist_point.default
+targetEntityType: node
+bundle: tourist_point
+mode: default
+content:
+  field_activities:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 105
+    region: content
+  field_address:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 104
+    region: content
+  field_description:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_imagess:
+    type: image
+    label: above
+    settings:
+      image_link: ''
+      image_style: ''
+      image_loading:
+        attribute: lazy
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  field_visiting_time:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 103
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden: {  }

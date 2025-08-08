@@ -1,0 +1,19 @@
+uuid: f58ca135-e9fc-48c4-9489-c3634d5f4db6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_activities
+    - node.type.tourist_point
+id: node.tourist_point.field_activities
+field_name: field_activities
+entity_type: node
+bundle: tourist_point
+label: Activities
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

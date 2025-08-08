@@ -1,0 +1,8 @@
+uuid: bd8d6fed-63ed-47fd-8fbc-6341a4f54018
+langcode: en
+status: true
+dependencies: {  }
+id: tourist-points
+label: 'Tourist Points'
+description: 'Baltistan tourist spots links'
+locked: false

@@ -1,0 +1,19 @@
+uuid: 5e8789b6-f54f-428f-bd6c-8de009c548da
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_address
+    - node.type.tourist_point
+id: node.tourist_point.field_address
+field_name: field_address
+entity_type: node
+bundle: tourist_point
+label: Address
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

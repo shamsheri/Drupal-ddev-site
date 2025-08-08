@@ -1,0 +1,25 @@
+uuid: 09114e58-8895-40ff-881a-bc143b726b0e
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.tourist-points
+  module:
+    - system
+  theme:
+    - olivero
+id: olivero_touristpoints
+theme: olivero
+region: sidebar
+weight: 0
+provider: null
+plugin: 'system_menu_block:tourist-points'
+settings:
+  id: 'system_menu_block:tourist-points'
+  label: 'Tourist Points'
+  label_display: visible
+  provider: system
+  level: 1
+  depth: null
+  expand_all_items: false
+visibility: {  }

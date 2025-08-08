@@ -1,0 +1,15 @@
+_core:
+  default_config_hash: ijfbzDTN4CbE7Sr-6ubWzy_t1vH4OtU1doNCLssVz-4
+langcode: en
+uuid: 9ff17861-03d8-4002-8562-47c2fb063a92
+name: 'Drupal and Devops'
+mail: shamsheria91@gmail.com
+slogan: ''
+page:
+  403: ''
+  404: ''
+  front: /node/5
+admin_compact_mode: false
+weight_select_max: 100
+default_langcode: en
+mail_notification: null
