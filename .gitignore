@@ -64,7 +64,7 @@ backup-*.sql
 /web/sites/*/twig_cache/
 
 # Development tools
-/.ddev/
+# /.ddev/
 /.lando/
 /docker-compose.yml
 /docker-compose.override.yml
