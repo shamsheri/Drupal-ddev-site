@@ -1,0 +1,128 @@
+# Drupal 11 .gitignore - Refined for Complete Sync
+
+# =============================================================================
+# COMPOSER APPROACH (Recommended for most projects)
+# =============================================================================
+# Uncomment these lines if you want to use pure Composer workflow:
+/web/core/
+/web/modules/contrib/
+/web/themes/contrib/
+/web/profiles/contrib/
+/web/profiles/
+/recipes/
+/web/libraries/
+/vendor/
+
+# =============================================================================
+# RSYNC APPROACH (Your current setup - includes contrib files in git)
+# =============================================================================
+# Comment out the lines above and use this approach instead:
+
+# Ignore vendor dependencies (always ignore this)
+/vendor/
+
+# Ignore core if managing via Composer (optional - can include in git)
+# /web/core/
+
+# =============================================================================
+# ALWAYS IGNORE (regardless of approach)
+# =============================================================================
+
+# Files directories
+/web/sites/*/files/
+/web/sites/*/private/
+/web/sites/*/tmp/
+/web/sites/*/translations/
+
+# Settings files with sensitive information
+/web/sites/*/settings.php
+/web/sites/*/settings.local.php
+/web/sites/*/services.yml
+/web/sites/*/services.local.yml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Database dumps and backups
+*.sql
+*.sql.gz
+/sql-dumps/
+/backups/
+database-*.sql
+backup-*.sql
+
+# Log files
+*.log
+/web/sites/*/logs/
+
+# Cache and temporary files
+/web/sites/*/cache/
+/web/sites/*/temp/
+/web/sites/*/temporary/
+/web/sites/*/twig_cache/
+
+# Development tools
+/.ddev/
+/.lando/
+/docker-compose.yml
+/docker-compose.override.yml
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js files (if using)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Build artifacts
+/build/
+/dist/
+
+# Patches directory (if using patches)
+/patches/
+
+# Drush and backup files
+*.sql.bak
+*.tar.gz
+/drush/
+/.console/
+
+# Local configuration directories
+/config/local/
+/config/staging/
+
+# =============================================================================
+# LOCAL-ONLY MODULES (Your custom local development modules)
+# =============================================================================
+/web/modules/local/
+/web/modules/custom/
+
+# =============================================================================
+# ALWAYS INCLUDE (override above rules)
+# =============================================================================
+!/web/sites/default/default.settings.php
+!/web/sites/default/default.services.yml
+!/web/.htaccess
+!/web/robots.txt
+!/web/web.config
+
+# Include custom modules and themes (created by your team)
+# !/web/modules/custom/
+!/web/themes/custom/
