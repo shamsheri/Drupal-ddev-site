@@ -1,0 +1,104 @@
+#ddev-generated
+# If you remove the ddev-generated line above you
+# are responsible for maintaining this file. DDEV will not then
+# update it, for example if you add `additional_hostnames`, etc.
+
+http:
+  routers:
+    Druapll-ddev-web-80-http:
+      entrypoints:
+        - http-80
+      rule: HostRegexp(`^druapll-ddev\.ddev\.site$`)
+      
+      service: "Druapll-ddev-web-80"
+      ruleSyntax: v3
+      tls: false
+      # middlewares:
+      #   - "Druapll-ddev-redirectHttps"
+    Druapll-ddev-web-8025-http:
+      entrypoints:
+        - http-8025
+      rule: HostRegexp(`^druapll-ddev\.ddev\.site$`)
+      
+      service: "Druapll-ddev-web-8025"
+      ruleSyntax: v3
+      tls: false
+      # middlewares:
+      #   - "Druapll-ddev-redirectHttps"
+    Druapll-ddev-xhgui-80-http:
+      entrypoints:
+        - http-8143
+      rule: HostRegexp(`^druapll-ddev\.ddev\.site$`)
+      
+      service: "Druapll-ddev-xhgui-80"
+      ruleSyntax: v3
+      tls: false
+      # middlewares:
+      #   - "Druapll-ddev-redirectHttps"
+    
+    
+    
+    Druapll-ddev-web-80-https:
+      entrypoints:
+        - http-443
+      rule: HostRegexp(`^druapll-ddev\.ddev\.site$`)
+      
+      service: "Druapll-ddev-web-80"
+      ruleSyntax: v3
+      
+      tls: true
+      
+    Druapll-ddev-web-8025-https:
+      entrypoints:
+        - http-8026
+      rule: HostRegexp(`^druapll-ddev\.ddev\.site$`)
+      
+      service: "Druapll-ddev-web-8025"
+      ruleSyntax: v3
+      
+      tls: true
+      
+    
+    Druapll-ddev-xhgui-80-https:
+      entrypoints:
+        - http-8142
+      rule: HostRegexp(`^druapll-ddev\.ddev\.site$`)
+      
+      service: "Druapll-ddev-xhgui-80"
+      ruleSyntax: v3
+      
+      tls: true
+      
+    
+
+  middlewares:
+    Druapll-ddev-redirectHttps:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+  services:
+    Druapll-ddev-web-80:
+      loadbalancer:
+        servers:
+          - url: http://ddev-Druapll-ddev-web:80
+        
+    Druapll-ddev-web-8025:
+      loadbalancer:
+        servers:
+          - url: http://ddev-Druapll-ddev-web:8025
+        
+    
+    
+    Druapll-ddev-xhgui-80:
+      loadbalancer:
+        servers:
+          - url: http://ddev-Druapll-ddev-xhgui:80
+        
+    
+    
+
+tls:
+  certificates:
+    - certFile: /mnt/ddev-global-cache/traefik/certs/Druapll-ddev.crt
+      keyFile: /mnt/ddev-global-cache/traefik/certs/Druapll-ddev.key
