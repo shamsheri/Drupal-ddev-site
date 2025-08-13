@@ -47,8 +47,8 @@ $ cat .gitignore
 .env.*.local
 
 # Database dumps and backups
-*.sql
-*.sql.gz
+#*.sql
+#*.sql.gz
 /sql-dumps/
 /backups/
 database-*.sql
@@ -101,7 +101,7 @@ yarn.lock
 
 # Drush and backup files
 *.sql.bak
-*.tar.gz
+#*.tar.gz
 /drush/
 /.console/
 

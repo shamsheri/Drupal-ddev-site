@@ -78,7 +78,7 @@ services:
             - host_ip: 127.0.0.1
               mode: ingress
               protocol: tcp
-              published: "32771"
+              published: "32772"
               target: 3306
         restart: "no"
         stop_grace_period: 1m0s
