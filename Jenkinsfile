@@ -1,9 +1,7 @@
 pipeline {
-  // Run the whole build inside a Linux PHP container (works even if Jenkins is on Windows)
   agent {
     docker {
       image 'php:8.3-cli'
-      // Give root, and mount Docker socket so we can start DB/web containers from inside the build
       args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
     }
   }
@@ -19,17 +17,15 @@ pipeline {
   }
 
   environment {
-    // Container/resource names
     NET_NAME       = 'drupal-ci-net'
     DB_CONTAINER   = 'drupal-db-ci'
     WEB_CONTAINER  = 'drupal-web-ci'
 
-    // DB config
     DB_NAME        = 'drupal'
     DB_USER        = 'drupal'
     DB_PASS        = 'drupal'
     DB_ROOT_PASS   = 'root'
-    DB_IMAGE       = 'mariadb:10.11'   // MariaDB compatible with Drupal
+    DB_IMAGE       = 'mariadb:10.11'
   }
 
   stages {
@@ -37,7 +33,7 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout([$class: 'GitSCM',
-          userRemoteConfigs: [[url: 'https://github.com/<your-username>/<your-repo>.git']],
+          userRemoteConfigs: [[url: 'https://github.com/shamsheri/Drupal-ddev-site.git']],
           branches: [[name: '*/main']]
         ])
       }
@@ -74,7 +70,7 @@ pipeline {
 
           echo "Waiting for DB to be ready..."
           for i in $(seq 1 60); do
-            if mysqladmin ping -h 127.0.0.1 -uroot -p${DB_ROOT_PASS} --silent; then
+            if docker exec ${DB_CONTAINER} mysqladmin ping -h 127.0.0.1 -uroot -p${DB_ROOT_PASS} --silent; then
               echo "DB is up"; break
             fi
             sleep 2
@@ -96,11 +92,9 @@ pipeline {
       steps {
         sh '''
           set -e
-          # Ensure files directory
           mkdir -p web/sites/default/files
           chmod -R 777 web/sites/default/files || true
 
-          # Extract files.tar.gz (supports both cases: tar includes "files/" or contents of it)
           if [ -f files.tar.gz ]; then
             mkdir -p web/sites/default
             tar -tzf files.tar.gz | head -1 | grep -q '^files/' && \
@@ -108,14 +102,13 @@ pipeline {
               (mkdir -p web/sites/default/files && tar -xzf files.tar.gz -C web/sites/default/files)
           fi
 
-          # Create settings.php pointing to DB container
           cat > web/sites/default/settings.php <<'PHP'
 <?php
 $databases['default']['default'] = [
   'database' => getenv('DB_NAME') ?: 'drupal',
   'username' => getenv('DB_USER') ?: 'drupal',
   'password' => getenv('DB_PASS') ?: 'drupal',
-  'host'     => 'drupal-db-ci', // DB container name on the same Docker network
+  'host'     => 'drupal-db-ci',
   'port'     => '3306',
   'driver'   => 'mysql',
   'prefix'   => '',
@@ -135,7 +128,6 @@ PHP
           set -e
           if [ -f drupal_dump.sql ]; then
             echo "Importing drupal_dump.sql ..."
-            # Copy and import inside DB container for speed
             docker cp drupal_dump.sql ${DB_CONTAINER}:/tmp/dump.sql
             docker exec ${DB_CONTAINER} sh -lc "mysql -u root -p${DB_ROOT_PASS} ${DB_NAME} < /tmp/dump.sql"
           else
@@ -156,7 +148,6 @@ PHP
             -v "$PWD":/var/www/html \
             php:8.3-apache
 
-          # Configure Apache to use /web as docroot, enable rewrite
           docker exec ${WEB_CONTAINER} bash -lc '
             a2enmod rewrite
             sed -ri -e "s!DocumentRoot /var/www/html!DocumentRoot /var/www/html/web!g" /etc/apache2/sites-available/000-default.conf
@@ -173,7 +164,6 @@ PHP
       steps {
         sh '''
           set +e
-          # Run Drush from inside the web container (uses vendor binaries mounted from workspace)
           docker exec ${WEB_CONTAINER} bash -lc 'php /var/www/html/vendor/bin/drush status || true'
           docker exec ${WEB_CONTAINER} bash -lc 'php /var/www/html/vendor/bin/drush cr -y || true'
         '''
@@ -184,7 +174,6 @@ PHP
   post {
     success {
       echo "✅ Build complete. Open http://localhost:8081"
-      echo "To stop containers: docker rm -f ${WEB_CONTAINER} ${DB_CONTAINER} || true && docker network rm ${NET_NAME} || true"
     }
     always {
       script {
