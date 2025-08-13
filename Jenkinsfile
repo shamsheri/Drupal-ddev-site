@@ -164,6 +164,23 @@ PHP
         '''
     }
 }
+        stage('Start Web Container') {
+      steps {
+        sh '''
+          set -e
+          docker rm -f ${WEB_CONTAINER} >/dev/null 2>&1 || true
+
+          docker run -d --name ${WEB_CONTAINER} \
+            --network ${NET_NAME} \
+            -p 8081:80 \
+            -v $(pwd):/var/www/html \
+            php:8.3-apache
+
+          echo "Waiting for Web container to start..."
+          sleep 5
+        '''
+      }
+    }
 stage('Run Web (Apache + PHP 8.3 + PHP extensions)') {
     steps {
         sh '''
