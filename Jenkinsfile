@@ -164,35 +164,37 @@ PHP
         '''
     }
 }
-
-    stage('Run Web (Apache + PHP 8.3 + PHP extensions)') {
-      steps {
+stage('Run Web (Apache + PHP 8.3 + PHP extensions)') {
+    steps {
         sh '''
+        # Install PHP extensions required by Drupal inside web container
+        docker exec ${WEB_CONTAINER} bash -lc '
           set -e
-          docker rm -f ${WEB_CONTAINER} >/dev/null 2>&1 || true
-          docker run -d --name ${WEB_CONTAINER} \
-            --network ${NET_NAME} \
-            -p 8081:80 \
-            -v "$PWD":/var/www/html \
-            php:8.3-apache
-
-          # Install PHP extensions required by Drupal inside web container
-          docker exec ${WEB_CONTAINER} bash -lc '
-            set -e
-            apt-get update
-            apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev libzip-dev libonig-dev libxml2-dev unzip
-            docker-php-ext-configure gd --with-freetype --with-jpeg
-            docker-php-ext-install -j"$(nproc)" gd pdo_mysql opcache zip mbstring xml
-            a2enmod rewrite headers expires
-            sed -ri -e "s!DocumentRoot /var/www/html!DocumentRoot /var/www/html/web!g" /etc/apache2/sites-available/000-default.conf
-            sed -ri -e "s!</VirtualHost>!<Directory /var/www/html/web>AllowOverride All Require all granted</Directory>\\n</VirtualHost>!g" /etc/apache2/sites-available/000-default.conf
-            service apache2 restart
-          '
-
-          echo "Site should be available at: http://localhost:8081"
+          apt-get update
+          apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev \
+                             libzip-dev libonig-dev libxml2-dev unzip
+          
+          # Configure and install PHP extensions
+          docker-php-ext-configure gd --with-freetype --with-jpeg
+          docker-php-ext-install -j"$(nproc)" gd pdo_mysql opcache zip mbstring
+          
+          # Enable Apache modules
+          a2enmod rewrite headers expires
+          
+          # Update DocumentRoot to /web for Drupal
+          sed -ri -e "s!DocumentRoot /var/www/html!DocumentRoot /var/www/html/web!g" \
+              /etc/apache2/sites-available/000-default.conf
+          
+          # Allow .htaccess overrides in web directory
+          sed -ri -e "s!</VirtualHost>!<Directory /var/www/html/web>AllowOverride All Require all granted</Directory>\\n</VirtualHost>!g" \
+              /etc/apache2/sites-available/000-default.conf
+          
+          # Restart Apache
+          service apache2 restart
+        '
         '''
-      }
     }
+}
 
     stage('Verify with Drush') {
       steps {
