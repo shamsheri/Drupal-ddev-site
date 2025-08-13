@@ -151,19 +151,19 @@ PHP
     }
 
     stage('Import database') {
-      steps {
+    steps {
         sh '''
-          set -e
-          if [ -f drupal_dump.sql ]; then
+        set -e
+        if [ -f drupal_dump.sql ]; then
             echo "Importing drupal_dump.sql ..."
             docker cp drupal_dump.sql ${DB_CONTAINER}:/tmp/dump.sql
-            docker exec ${DB_CONTAINER} sh -lc "mysql -u root -p${DB_ROOT_PASS} ${DB_NAME} < /tmp/dump.sql"
-          else
+            docker exec ${DB_CONTAINER} sh -lc "mysql --binary-mode=1 -u root -p${DB_ROOT_PASS} ${DB_NAME} < /tmp/dump.sql"
+        else
             echo "No drupal_dump.sql found - skipping import"
-          fi
+        fi
         '''
-      }
     }
+}
 
     stage('Run Web (Apache + PHP 8.3 + PHP extensions)') {
       steps {
