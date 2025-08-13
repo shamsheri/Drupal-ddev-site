@@ -13,7 +13,7 @@ pipeline {
   }
 
   parameters {
-    booleanParam(name: 'CLEANUP', defaultValue: false, description: 'Cleanup containers after build')
+    booleanParam(name: 'CLEANUP', defaultValue: false, description: 'Cleanup containers & network after build')
   }
 
   environment {
@@ -26,6 +26,10 @@ pipeline {
     DB_PASS        = 'drupal'
     DB_ROOT_PASS   = 'root'
     DB_IMAGE       = 'mariadb:10.11'
+
+    // Composer quality-of-life
+    COMPOSER_MEMORY_LIMIT = '-1'
+    COMPOSER_ALLOW_SUPERUSER = '1'
   }
 
   stages {
@@ -39,12 +43,23 @@ pipeline {
       }
     }
 
-    stage('Install tools (composer, mysql-client, docker cli)') {
+    stage('Pre-clean (optional)') {
+      steps {
+        sh '''
+          set -e
+          docker rm -f ${WEB_CONTAINER} ${DB_CONTAINER} >/dev/null 2>&1 || true
+          docker network rm ${NET_NAME} >/dev/null 2>&1 || true
+        '''
+      }
+    }
+
+    stage('Install tools (composer, mariadb-client, docker cli)') {
       steps {
         sh '''
           set -e
           apt-get update
-          apt-get install -y git unzip curl ca-certificates mysql-client docker.io
+          # mysql-client -> mariadb-client (Debian new name)
+          apt-get install -y git unzip curl ca-certificates mariadb-client docker.io tar
           curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
           php -v
           composer -V
@@ -70,7 +85,7 @@ pipeline {
 
           echo "Waiting for DB to be ready..."
           for i in $(seq 1 60); do
-            if docker exec ${DB_CONTAINER} mysqladmin ping -h 127.0.0.1 -uroot -p${DB_ROOT_PASS} --silent; then
+            if docker exec ${DB_CONTAINER} sh -lc "mysqladmin ping -h 127.0.0.1 -uroot -p${DB_ROOT_PASS} --silent"; then
               echo "DB is up"; break
             fi
             sleep 2
@@ -83,7 +98,9 @@ pipeline {
       steps {
         sh '''
           set -e
-          composer install --no-interaction --prefer-dist
+          export COMPOSER_MEMORY_LIMIT=${COMPOSER_MEMORY_LIMIT}
+          export COMPOSER_ALLOW_SUPERUSER=${COMPOSER_ALLOW_SUPERUSER}
+          composer install --no-interaction --prefer-dist --no-progress
         '''
       }
     }
@@ -97,9 +114,13 @@ pipeline {
 
           if [ -f files.tar.gz ]; then
             mkdir -p web/sites/default
-            tar -tzf files.tar.gz | head -1 | grep -q '^files/' && \
-              tar -xzf files.tar.gz -C web/sites/default || \
-              (mkdir -p web/sites/default/files && tar -xzf files.tar.gz -C web/sites/default/files)
+            # handle both structures: files/ or its inner contents
+            if tar -tzf files.tar.gz | head -1 | grep -q '^files/'; then
+              tar -xzf files.tar.gz -C web/sites/default
+            else
+              mkdir -p web/sites/default/files
+              tar -xzf files.tar.gz -C web/sites/default/files
+            fi
           fi
 
           cat > web/sites/default/settings.php <<'PHP'
@@ -137,7 +158,7 @@ PHP
       }
     }
 
-    stage('Run Web (Apache + PHP 8.3)') {
+    stage('Run Web (Apache + PHP 8.3 + PHP extensions)') {
       steps {
         sh '''
           set -e
@@ -148,8 +169,14 @@ PHP
             -v "$PWD":/var/www/html \
             php:8.3-apache
 
+          # Install PHP extensions required by Drupal inside web container
           docker exec ${WEB_CONTAINER} bash -lc '
-            a2enmod rewrite
+            set -e
+            apt-get update
+            apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev libzip-dev libonig-dev libxml2-dev unzip
+            docker-php-ext-configure gd --with-freetype --with-jpeg
+            docker-php-ext-install -j"$(nproc)" gd pdo_mysql opcache zip mbstring xml
+            a2enmod rewrite headers expires
             sed -ri -e "s!DocumentRoot /var/www/html!DocumentRoot /var/www/html/web!g" /etc/apache2/sites-available/000-default.conf
             sed -ri -e "s!</VirtualHost>!<Directory /var/www/html/web>AllowOverride All Require all granted</Directory>\\n</VirtualHost>!g" /etc/apache2/sites-available/000-default.conf
             service apache2 restart
@@ -164,8 +191,13 @@ PHP
       steps {
         sh '''
           set +e
-          docker exec ${WEB_CONTAINER} bash -lc 'php /var/www/html/vendor/bin/drush status || true'
-          docker exec ${WEB_CONTAINER} bash -lc 'php /var/www/html/vendor/bin/drush cr -y || true'
+          # Only run if drush exists
+          if [ -f vendor/bin/drush ]; then
+            docker exec ${WEB_CONTAINER} bash -lc 'php /var/www/html/vendor/bin/drush status || true'
+            docker exec ${WEB_CONTAINER} bash -lc 'php /var/www/html/vendor/bin/drush cr -y || true'
+          else
+            echo "Drush not found in vendor/bin/drush - skipping"
+          fi
         '''
       }
     }
