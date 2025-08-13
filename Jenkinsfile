@@ -93,18 +93,25 @@ pipeline {
         '''
       }
     }
+stage('Composer install') {
+  steps {
+    sh '''
+      set -e
+      # Fix Git safe directory issue
+      git config --global --add safe.directory /var/lib/jenkins/workspace/drupal-pipeline
 
-    stage('Composer install') {
-      steps {
-        sh '''
-          set -e
-          export COMPOSER_MEMORY_LIMIT=${COMPOSER_MEMORY_LIMIT}
-          export COMPOSER_ALLOW_SUPERUSER=${COMPOSER_ALLOW_SUPERUSER}
-          composer install --no-interaction --prefer-dist --no-progress
-        '''
-      }
-    }
+      # Install required PHP extensions for Drupal
+      apt-get update
+      apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev
+      docker-php-ext-configure gd --with-freetype --with-jpeg
+      docker-php-ext-install gd
 
+      export COMPOSER_MEMORY_LIMIT=${COMPOSER_MEMORY_LIMIT}
+      export COMPOSER_ALLOW_SUPERUSER=${COMPOSER_ALLOW_SUPERUSER}
+      composer install --no-interaction --prefer-dist --no-progress
+    '''
+  }
+}
     stage('Prepare files & settings.php') {
       steps {
         sh '''
